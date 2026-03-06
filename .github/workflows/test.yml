@@ -7,14 +7,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-<<<<<<< ours
-        uses: actions/checkout@v4
-=======
         uses: actions/checkout@v6
       #  with:
       #    repository: ${{ vars.REPOSITORY }}
       #    ref: ${{ vars.REF }}
->>>>>>> theirs
 
       - name: Setup uv
         uses: astral-sh/setup-uv@v7.1.4
@@ -31,12 +27,8 @@ jobs:
           OPENAI_API_BASE: ${{ secrets.OPENAI_API_BASE }}
           CUSTOM_CONFIG: ${{ vars.CUSTOM_CONFIG }}
         run: |
-<<<<<<< ours
-          uv run biorxiv_demo.py --debug
-=======
           export DEBUG=true
           printf "%b\n" "$CUSTOM_CONFIG" > config/custom.yaml
           echo "Use custom config: "
           cat config/custom.yaml
           uv run src/zotero_arxiv_daily/main.py
->>>>>>> theirs

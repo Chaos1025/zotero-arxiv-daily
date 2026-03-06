@@ -1,8 +1,4 @@
-<<<<<<< ours
-from paper import ArxivPaper, BiorxivPaper
-=======
 from .protocol import Paper
->>>>>>> theirs
 import math
 
 
@@ -114,78 +110,6 @@ def get_stars(score:float):
         return '<div class="star-wrapper">'+full_star * full_star_num + half_star * half_star_num + '</div>'
 
 
-<<<<<<< ours
-def render_email(papers:list[ArxivPaper], papers_biorxiv:list[BiorxivPaper]):
-    parts = []
-    if len(papers) == 0:
-        framework1 = framework.replace('__CONTENT-ARXIV__', get_empty_html())
-    else:
-        for p in tqdm(papers,desc='Rendering Email'):
-            rate = get_stars(p.score)
-            author_list = [a.name for a in p.authors]
-            num_authors = len(author_list)
-            
-            if num_authors <= 5:
-                authors = ', '.join(author_list)
-            else:
-                authors = ', '.join(author_list[:3] + ['...'] + author_list[-2:])
-            if p.affiliations is not None:
-                affiliations = p.affiliations[:5]
-                affiliations = ', '.join(affiliations)
-                if len(p.affiliations) > 5:
-                    affiliations += ', ...'
-            else:
-                affiliations = 'Unknown Affiliation'
-            parts.append(get_block_html(p.title, authors,rate,p.arxiv_id ,p.tldr, p.pdf_url, p.code_url, affiliations))
-            time.sleep(10)
-
-        content = '<br>' + '</br><br>'.join(parts) + '</br>'
-        framework1 = framework.replace('__CONTENT-ARXIV__', content)
-
-
-    parts = []
-    if len(papers_biorxiv) == 0:
-        return framework1.replace('__CONTENT-BIORXIV__', get_empty_html())
-    else:
-        for p in tqdm(papers_biorxiv,desc='Rendering Email'):
-            rate = get_stars(p.score)
-            authors = [a for a in p.authors[:5]]
-            authors = ', '.join(authors)
-            if len(p.authors) > 5:
-                authors += ', ...'
-            if p.institution is not None:
-                affiliations = p.institution
-            else:
-                affiliations = 'Unknown Affiliation'
-            parts.append(get_block_html(p.title, authors,rate,p.biorxiv_id,p.tldr, p.paper_url, p.code_url, affiliations))
-
-        content = '<br>' + '</br><br>'.join(parts) + '</br>'
-        return framework1.replace('__CONTENT-BIORXIV__', content)
-
-
-def send_email(sender:str, receiver:str, password:str,smtp_server:str,smtp_port:int, html:str,):
-    def _format_addr(s):
-        name, addr = parseaddr(s)
-        return formataddr((Header(name, 'utf-8').encode(), addr))
-
-    msg = MIMEText(html, 'html', 'utf-8')
-    msg['From'] = _format_addr('Github Action <%s>' % sender)
-    msg['To'] = _format_addr('You <%s>' % receiver)
-    today = datetime.datetime.now().strftime('%Y/%m/%d')
-    msg['Subject'] = Header(f'Daily arXiv {today}', 'utf-8').encode()
-
-    try:
-        server = smtplib.SMTP(smtp_server, smtp_port)
-        server.starttls()
-    except Exception as e:
-        logger.warning(f"Failed to use TLS. {e}")
-        logger.warning(f"Try to use SSL.")
-        server = smtplib.SMTP_SSL(smtp_server, smtp_port)
-
-    server.login(sender, password)
-    server.sendmail(sender, [receiver], msg.as_string())
-    server.quit()
-=======
 def render_email(papers:list[Paper]) -> str:
     parts = []
     if len(papers) == 0 :
@@ -211,4 +135,3 @@ def render_email(papers:list[Paper]) -> str:
 
     content = '<br>' + '</br><br>'.join(parts) + '</br>'
     return framework.replace('__CONTENT__', content)
->>>>>>> theirs
