@@ -16,3 +16,5 @@ test.ipynb
 logs
 models
 test-compose.yml
+outputs
+config/private.yaml

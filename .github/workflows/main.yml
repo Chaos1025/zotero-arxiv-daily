@@ -9,12 +9,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
+        with:
+          repository: ${{ vars.REPOSITORY }}
+          ref: ${{ vars.REF }}
 
       - name: Setup uv
-        uses: astral-sh/setup-uv@v3
-        with:
-          version: '0.5.4'
+        uses: astral-sh/setup-uv@v7
 
       - name: Run script
         env:
@@ -34,7 +35,9 @@ jobs:
           USE_LLM_API: ${{ secrets.USE_LLM_API }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           OPENAI_API_BASE: ${{ secrets.OPENAI_API_BASE }}
-          MODEL_NAME: ${{ secrets.MODEL_NAME }}
-          LANGUAGE: ${{ vars.LANGUAGE }}
+          CUSTOM_CONFIG: ${{ vars.CUSTOM_CONFIG }}
         run: |
-          uv run biorxiv_demo.py
+          printf "%b\n" "$CUSTOM_CONFIG" > config/custom.yaml
+          echo "Use custom config: "
+          cat config/custom.yaml
+          uv run src/zotero_arxiv_daily/main.py
