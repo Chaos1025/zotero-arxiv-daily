@@ -27,14 +27,8 @@ framework = """
 </head>
 <body>
 
-<h1>Arxiv Papers</h1>
 <div>
-    __CONTENT-ARXIV__
-</div>
-
-<h1>BioRxiv Papers</h1>
-<div>
-    __CONTENT-BIORXIV__
+    __CONTENT__
 </div>
 
 <br><br>
