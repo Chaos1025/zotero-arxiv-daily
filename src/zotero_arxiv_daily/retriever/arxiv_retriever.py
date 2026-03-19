@@ -4,11 +4,14 @@ from arxiv import Result as ArxivResult
 from ..protocol import Paper
 from ..utils import extract_markdown_from_pdf, extract_tex_code_from_tar
 from tempfile import TemporaryDirectory
+from concurrent.futures import ThreadPoolExecutor, TimeoutError
 import feedparser
 from urllib.request import urlretrieve
 from tqdm import tqdm
 import os
 from loguru import logger
+
+PDF_EXTRACT_TIMEOUT = 180
 @register_retriever("arxiv")
 class ArxivRetriever(BaseRetriever):
     def __init__(self, config):
@@ -18,12 +21,18 @@ class ArxivRetriever(BaseRetriever):
     def _retrieve_raw_papers(self) -> list[ArxivResult]:
         client = arxiv.Client(num_retries=10,delay_seconds=10)
         query = '+'.join(self.config.source.arxiv.category)
+        include_cross_list = self.config.source.arxiv.get("include_cross_list", False)
         # Get the latest paper from arxiv rss feed
         feed = feedparser.parse(f"https://rss.arxiv.org/atom/{query}")
         if 'Feed error for query' in feed.feed.title:
             raise Exception(f"Invalid ARXIV_QUERY: {query}.")
         raw_papers = []
-        all_paper_ids = [i.id.removeprefix("oai:arXiv.org:") for i in feed.entries if i.get("arxiv_announce_type","new") == 'new']
+        allowed_announce_types = {"new", "cross"} if include_cross_list else {"new"}
+        all_paper_ids = [
+            i.id.removeprefix("oai:arXiv.org:")
+            for i in feed.entries
+            if i.get("arxiv_announce_type", "new") in allowed_announce_types
+        ]
         if self.config.executor.debug:
             all_paper_ids = all_paper_ids[:10]
 
@@ -43,7 +52,12 @@ class ArxivRetriever(BaseRetriever):
         authors = [a.name for a in raw_paper.authors]
         abstract = raw_paper.summary
         pdf_url = raw_paper.pdf_url
-        full_text = extract_text_from_pdf(raw_paper)
+        try:
+            with ThreadPoolExecutor(max_workers=1) as pool:
+                full_text = pool.submit(extract_text_from_pdf, raw_paper).result(timeout=PDF_EXTRACT_TIMEOUT)
+        except TimeoutError:
+            logger.warning(f"PDF extraction timed out for {raw_paper.title}")
+            full_text = None
         if full_text is None:
             full_text = extract_text_from_tar(raw_paper)
         return Paper(
