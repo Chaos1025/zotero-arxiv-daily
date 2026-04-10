@@ -19,7 +19,13 @@ class LocalReranker(BaseReranker):
             logging.getLogger("huggingface_hub.utils._http").setLevel(logging.ERROR)
             warnings.filterwarnings("ignore", category=FutureWarning)
 
-        st_kwargs = {"trust_remote_code": True}
+        st_kwargs = {
+            "trust_remote_code": True,
+            # Force eager attention so loading does not try to dispatch to
+            # flash_attention_2 (which requires the optional `flash_attn`
+            # package and a CUDA build — not available on CPU-only CI runners).
+            "model_kwargs": {"attn_implementation": "eager"},
+        }
         revision = self.config.reranker.local.get("revision", None)
         if revision:
             st_kwargs["revision"] = revision
